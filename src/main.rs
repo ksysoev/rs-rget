@@ -33,6 +33,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let resp = req.send().await?;
+
+    let status = resp.status();
+    if status.is_success() {
+        println!(
+            "{} {}\n",
+            Paint::green(status.as_str()).bold(),
+            Paint::green(status.canonical_reason().unwrap_or("")).bold()
+        );
+    } else {
+        println!(
+            "{} {}\n",
+            Paint::red(status.as_str()).bold(),
+            Paint::red(status.canonical_reason().unwrap_or("")).bold()
+        );
+    }
+
     let headers = resp.headers();
     if args.show_headers {
         headers.iter().for_each(|(k, v)| {
