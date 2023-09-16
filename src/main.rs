@@ -33,7 +33,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let resp = req.send().await?;
-
     let headers = resp.headers();
     if args.show_headers {
         headers.iter().for_each(|(k, v)| {
@@ -43,8 +42,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!();
     }
 
+    let default_content_type = http::header::HeaderValue::from_static("text/plain");
+    let content_type_header = headers.get("content-type").unwrap_or(&default_content_type);
+    let is_json_response = content_type_header
+        .to_str()
+        .unwrap_or("")
+        .contains("application/json");
+
     let data = resp.text().await?;
 
-    println!("{}", data.to_colored_json_auto()?);
+    if is_json_response {
+        println!("{}", data.to_colored_json_auto()?);
+    } else {
+        println!("{}", data);
+    }
+
     Ok(())
 }
