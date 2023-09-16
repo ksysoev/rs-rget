@@ -2,6 +2,7 @@ use clap::Parser;
 use colored_json::prelude::*;
 use http::Method;
 use reqwest::Client;
+use yansi::Paint;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -14,6 +15,8 @@ struct Args {
     method: String,
     #[arg(short, long, default_value = "")]
     json: String,
+    #[arg(short, long, default_value = "false")]
+    show_headers: bool,
 }
 
 #[tokio::main]
@@ -30,6 +33,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let resp = req.send().await?;
+
+    let headers = resp.headers();
+    if args.show_headers {
+        headers.iter().for_each(|(k, v)| {
+            println!("{}: {}", Paint::blue(k).bold(), v.to_str().unwrap_or(""));
+        });
+
+        println!();
+    }
+
     let data = resp.text().await?;
 
     println!("{}", data.to_colored_json_auto()?);
